@@ -1,0 +1,40 @@
+body{
+    margin: 0;
+    padding: 0;
+    background: #FFFC85
+}
+.about{
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+    transition: 0.5s;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+p{
+    padding: 10px;
+    display: inline-block;
+    font-family: verdana;
+    font-size: 1.5em;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #262626;
+}
+
+a{
+    padding: 10px;
+    display: inline-block;
+    font-family: verdana;
+    font-size: 2em;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #262626;
+    bottom: 10%;
+}
+a:hover{
+    background: WHITE
+}
