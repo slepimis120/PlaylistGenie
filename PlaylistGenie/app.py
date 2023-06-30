@@ -1,11 +1,15 @@
 from flask import Flask, render_template
 import PlaylistGenie.templates
+import PlaylistGenie.spotify as spotify
 
 app = Flask(__name__)
 
-@app.route('/')
-def main():
-    return render_template('main.html')
+
+@app.route("/")
+def index():
+
+    return render_template("main.html", playlists=spotify.popular_playlists)
+
 
 @app.route('/about')
 def about():

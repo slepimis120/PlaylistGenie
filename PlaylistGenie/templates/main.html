@@ -9,5 +9,11 @@
             <li><a href="about">About</a></li>
          </ul>
       </div>
+      <h1>Popular Playlists</h1>
+      <ul>
+           {% for playlist in playlists %}
+         <li><a>{{ playlist.name }}</a></li>
+           {% endfor %}
+      </ul>
    </body>
 </html>
