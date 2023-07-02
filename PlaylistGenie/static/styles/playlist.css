@@ -1,162 +1,76 @@
-body{
-    position: absolute;
-    margin: 0;
-    padding: 0;
-    background: #FFFC85
-}
-.menu{
-    overflow-y: scroll;
-    margin: 0;
-    padding: 0;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: #FFF;
-    z-index: 1;
-    transition: 0.5s;
-}
-ul{
-    margin: 0;
-    padding: 0;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-}
-ul li{
-    list-style: none;
+.cards-list {
+  z-index: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
 }
 
-ul li a{
-    padding: 10px;
-    display: inline-block;
-    font-family: verdana;
-    font-size: 2em;
-    text-decoration: none;
-    text-transform: uppercase;
-    color: #262626;
-}
-ul li a:hover{
-    background: #FFFC85
+.flexbox{
+  display: table;
+  width: 80%;
+  border-spacing: 30px;
+
 }
 
-/* Playlist*/
-
-  body {
-  font-family: 'Raleway', sans-serif;
-  background-color: #8186a3;
-}
-
-.contenedor {
+.card {
+  aspect-ratio: 1 / 1 ;
+  display: table-cell;
   height: 100%;
-  padding: 5% 0;
-}
-
-h1 {
-  color: #FCFBFA;
-}
-
-.container_foto {
-  background-color: rgba(57, 62, 93, 0.7);
-  padding: 0;
-  overflow: hidden;
-  max-width: 350px;
-  margin: 5px;
-}
-
-.container_foto article {
-  padding: 10%;
-  position: absolute;
-  bottom: 0;
-  z-index: 1;
-  -webkit-transition: all 0.5s ease;
-  -moz-transition: all 0.5s ease;
-  -o-transition: all 0.5s ease;
-  -ms-transition: all 0.5s ease;
-  transition: all 0.5s ease;
-}
-
-.container_foto h2 {
-  color: #fff;
-  font-weight: 800;
-  font-size: 25px;
-  border-bottom: #fff solid 1px;
-}
-
-.container_foto h4 {
-  font-weight: 300;
-  color: #fff;
-  font-size: 16px;
-}
-
-.container_foto img {
-  width: 100%;
-  top: 0;
-  left: 0;
-  opacity: 0.4;
-  -webkit-transition: all 4s ease;
-  -moz-transition: all 4s ease;
-  -o-transition: all 4s ease;
-  -ms-transition: all 4s ease;
-  transition: all 4s ease;
-}
-
-.ver_mas {
-  background-color: #FEB66C;
-  position: absolute;
-  width: 100%;
-  height: 70px;
-  bottom: 0;
-  z-index: 1;
-  opacity: 0;
-  transform: translate(0px, 70px);
-  -webkit-transform: translate(0px, 70px);
-  -moz-transform: translate(0px, 70px);
-  -o-transform: translate(0px, 70px);
-  -ms-transform: translate(0px, 70px);
-  -webkit-transition: all 0.2s ease-in-out;
-  -moz-transition: all 0.2s ease-in-out;
-  -o-transition: all 0.2s ease-in-out;
-  -ms-transition: all 0.2s ease-in-out;
-  transition: all 0.2s ease-in-out;
-}
-
-.ver_mas span {
-  font-size: 40px;
-  color: #fff;
-  position: relative;
-  margin: 0 auto;
-  width: 100%;
-  top: 13px;
-}
-
-
-/*hovers*/
-
-.container_foto:hover {
   cursor: pointer;
+  transition: 0.4s;
 }
 
-.container_foto:hover img {
-  opacity: 0.1;
-  transform: scale(1.5);
+tr{
+  height: 1px;
+  table-layout: fixed;
 }
 
-.container_foto:hover article {
-  transform: translate(2px, -69px);
-  -webkit-transform: translate(2px, -69px);
-  -moz-transform: translate(2px, -69px);
-  -o-transform: translate(2px, -69px);
-  -ms-transform: translate(2px, -69px);
+td{
+  height: inherit;
 }
 
-.container_foto:hover .ver_mas {
-  transform: translate(0px, 0px);
-  -webkit-transform: translate(0px, 0px);
-  -moz-transform: translate(0px, 0px);
-  -o-transform: translate(0px, 0px);
-  -ms-transform: translate(0px, 0px);
+.card_image {
+  width: inherit;
+  height: inherit;
+  background: black;
+}
+
+img {
+  width: inherit;
+  height: inherit;
+  object-fit: cover;
   opacity: 1;
+}
+
+.card_title {
+  text-align: center;
+  border-radius: 0px 0px 40px 40px;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 20px;
+  margin-top: -20%;
+  height: 40px;
+  opacity: 1;
+}
+
+.card:hover {
+  transform: scale(0.9, 0.9);
+  box-shadow: 5px 5px 30px 15px rgba(0,0,0,0.25),
+    -5px -5px 30px 15px rgba(0,0,0,0.22);
+}
+
+.title-white {
+  color: white;
+}
+
+.title-black {
+  color: black;
+}
+
+@media all and (max-width: 500px) {
+  .card-list {
+    /* On small screens, we are no longer using row direction but column */
+    flex-direction: column;
+  }
 }

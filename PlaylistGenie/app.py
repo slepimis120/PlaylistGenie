@@ -61,7 +61,7 @@ def get_user_playlists():
     if not authorized:
         return redirect('/')
     my_playlists = get_nonempty_playlists()
-    load_database(my_playlists[0])
+    #load_database(my_playlists[0])
     return render_template("home.html", playlists=my_playlists)
 
 
@@ -91,9 +91,10 @@ def get_artists_tracks(playlist):
     all_tracks = []
     tracks = sp.playlist_items(playlist['id'])
     for track in tracks['items']:
-        artist_tracks = sp.artist_top_tracks(track['track']['artists'][0]['id'], country='US')
-        for t in artist_tracks['tracks']:
-            all_tracks.append(t['id'])
+        if track.get("is_local") == False:
+            artist_tracks = sp.artist_top_tracks(track['track']['artists'][0]['id'], country='US')
+            for t in artist_tracks['tracks']:
+                all_tracks.append(t['id'])
     return all_tracks
 
 

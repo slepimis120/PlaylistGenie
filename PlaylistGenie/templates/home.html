@@ -1,21 +1,29 @@
+<!DOCTYPE html>
 <html>
    <head>
+      <title>PlaylistGenie</title>
       <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/playlist.css') }}" />
-   </head>
+      </head>
    <body>
-      <div class="menu">
-          <ul>
-           {% for playlist in playlists %}
-         <li><a href="{{ url_for('autoencoder', my_var=playlist.id) }}">{{ playlist.name }}</a></li>
-           {% endfor %}
-      </ul>
-      </div>
-     <!-- <h1>Popular Playlists</h1>
-      <ul>
-           {% for playlist in playlists %}
-         <li><a>{{ playlist.name }}</a></li>
-           {% endfor %}
-      </ul>
-      -->
+      <table>
+         {% for playlist_row in playlists | batch(3, '&nbsp;') %}
+         <tr class="flexbox">
+            {% for playlist in playlist_row %}
+            <td>
+               <div class="card">
+                  <a href="{{ url_for('autoencoder', my_var=playlist.id) }}">
+                     {% for image in playlist.images %}
+                        <img src="{{image.url}}" class="card_image"/>
+                     {% endfor %}
+                     <div class="card_title title-white">
+                        <p>{{playlist.name}}</p>
+                     </div>
+                  </a>
+               </div>
+            </td>
+            {% endfor %}
+         </tr>
+         {% endfor %}
+      </table>
    </body>
 </html>
