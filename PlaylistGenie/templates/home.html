@@ -4,10 +4,11 @@
    </head>
    <body>
       <div class="menu">
-         <ul>
-            <li><a href="login">Login</a></li>
-            <li><a href="about">About</a></li>
-         </ul>
+          <ul>
+           {% for playlist in playlists %}
+         <li><a>{{ playlist.name }}</a></li>
+           {% endfor %}
+      </ul>
       </div>
      <!-- <h1>Popular Playlists</h1>
       <ul>
