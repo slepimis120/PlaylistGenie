@@ -60,37 +60,52 @@ def get_user_playlists():
     session.modified = True
     if not authorized:
         return redirect('/')
-    my_playlists = get_artists_tracks()
+    my_playlists = get_nonempty_playlists()
+    load_database(my_playlists[0])
     return render_template("home.html", playlists=my_playlists)
 
 
 def get_nonempty_playlists():
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
     my_playlists = sp.current_user_playlists(limit=50)['items']
-    new_playlist = []
+    new_playlists = []
     for playlist in my_playlists:
         playlistitem = sp.playlist_items(playlist.get("id"))
         count = 0
         for item in playlistitem.get("items"):
-            if item.get("is_local") == False:
+            if not item.get("is_local"):
                 count += 1
         if count > 0:
-            new_playlist.append(playlist)
-    return new_playlist
+            new_playlists.append(playlist)
+    return new_playlists
 
-def get_artists_tracks():
+
+def load_database(playlist):
+    tracks=get_artists_tracks(playlist)
+    get_features(tracks)
+
+
+def get_artists_tracks(playlist):
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
     playlists = sp.current_user_playlists(limit=50)['items']
-    all_tracks=[]
-    for playlist in playlists:
-        tracks = sp.playlist_items(playlist['id'])
-        for track in tracks['items']:
-            artist_tracks = sp.artist_top_tracks(track['track']['artists'][0]['id'], country='US')
-            for t in artist_tracks['tracks']:
-                all_tracks.append(t)
-    for track in all_tracks:
-        print(track['name'])
+    all_tracks = []
+    tracks = sp.playlist_items(playlist['id'])
+    for track in tracks['items']:
+        artist_tracks = sp.artist_top_tracks(track['track']['artists'][0]['id'], country='US')
+        for t in artist_tracks['tracks']:
+            all_tracks.append(t['id'])
     return all_tracks
+
+
+def get_features(tracks):
+    sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
+    features=[]
+    for track in tracks:
+        track_features = sp.audio_features(track)
+        features.append({"track_id":track,"features":track_features[0]})
+    for feature in features:
+        print(feature)
+    return features
 
 
 def get_token():
