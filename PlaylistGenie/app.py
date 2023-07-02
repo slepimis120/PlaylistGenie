@@ -60,8 +60,22 @@ def get_user_playlists():
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
     print(session.get('token_info').get('access_token'))
     my_playlists = sp.current_user_playlists(limit=50)['items']
-    print(my_playlists)
+    get_artists_tracks(my_playlists)
     return render_template("home.html", playlists=my_playlists)
+
+
+def get_artists_tracks(playlists):
+    sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
+    all_tracks=[]
+    for playlist in playlists:
+        tracks = sp.playlist_items(playlist['id'])
+        for track in tracks['items']:
+            artist_tracks = sp.artist_top_tracks(track['track']['artists'][0]['id'], country='US')
+            for t in artist_tracks['tracks']:
+                all_tracks.append(t)
+    for track in all_tracks:
+        print(track['name'])
+    return all_tracks
 
 
 def get_token():
