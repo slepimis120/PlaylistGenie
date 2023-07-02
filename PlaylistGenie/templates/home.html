@@ -5,25 +5,14 @@
       <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/playlist.css') }}" />
       </head>
    <body>
-      <table>
-         {% for playlist_row in playlists | batch(3, '&nbsp;') %}
-         <tr class="flexbox">
-            {% for playlist in playlist_row %}
-            <td>
-               <div class="card">
-                  <a href="{{ url_for('autoencoder', my_var=playlist.id) }}">
-                     {% for image in playlist.images %}
-                        <img src="{{image.url}}" class="card_image"/>
-                     {% endfor %}
-                     <div class="card_title title-white">
-                        <p>{{playlist.name}}</p>
-                     </div>
-                  </a>
-               </div>
-            </td>
-            {% endfor %}
-         </tr>
-         {% endfor %}
-      </table>
+   <div>
+       {% for playlist in playlists %}
+       <a href="{{ url_for('autoencoder', my_var=playlist.id) }}">
+        <figure style="--c:#fff5">
+            <img src={{playlist.images[0].url}} alt="Mountains">
+        </figure>
+       </a>
+       {% endfor %}}
+      </div>
    </body>
 </html>
