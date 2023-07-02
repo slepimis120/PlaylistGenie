@@ -6,7 +6,7 @@
       <div class="menu">
           <ul>
            {% for playlist in playlists %}
-         <li><a>{{ playlist.name }}</a></li>
+         <li><a href="{{ url_for('autoencoder', my_var=playlist.id) }}">{{ playlist.name }}</a></li>
            {% endfor %}
       </ul>
       </div>

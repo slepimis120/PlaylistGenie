@@ -43,6 +43,9 @@ def authorize():
     session["token_info"] = token_info
     return redirect("/getPlaylists")
 
+@app.route('/autoencoder')
+def autoencoder():
+    return render_template("main.html")
 
 @app.route('/logout')
 def logout():
@@ -57,15 +60,27 @@ def get_user_playlists():
     session.modified = True
     if not authorized:
         return redirect('/')
-    sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
-    print(session.get('token_info').get('access_token'))
-    my_playlists = sp.current_user_playlists(limit=50)['items']
-    get_artists_tracks(my_playlists)
+    my_playlists = get_artists_tracks()
     return render_template("home.html", playlists=my_playlists)
 
 
-def get_artists_tracks(playlists):
+def get_nonempty_playlists():
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
+    my_playlists = sp.current_user_playlists(limit=50)['items']
+    new_playlist = []
+    for playlist in my_playlists:
+        playlistitem = sp.playlist_items(playlist.get("id"))
+        count = 0
+        for item in playlistitem.get("items"):
+            if item.get("is_local") == False:
+                count += 1
+        if count > 0:
+            new_playlist.append(playlist)
+    return new_playlist
+
+def get_artists_tracks():
+    sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
+    playlists = sp.current_user_playlists(limit=50)['items']
     all_tracks=[]
     for playlist in playlists:
         tracks = sp.playlist_items(playlist['id'])
