@@ -1,6 +1,7 @@
 import base64
 import time
 import urllib
+from os.path import exists
 
 import spotipy
 from flask import Flask, render_template, redirect, request, session, url_for
@@ -20,7 +21,10 @@ scope = "playlist-read-private"
 
 @app.route("/")
 def index():
-    return render_template("main.html")
+    if(exists(".cache")):
+        return redirect("/getPlaylists")
+    else:
+        return render_template("main.html")
 
 
 @app.route('/login')
