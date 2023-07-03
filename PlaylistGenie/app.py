@@ -51,6 +51,12 @@ def authorize():
 
 @app.route('/autoencoder')
 def autoencoder():
+    code = request.args.get('id')
+    get_tracks_from_playlist(code)
+    print("Loaded songs from the playlist...")
+    load_database(chosen_playlist)
+    print("Created a database...")
+    encoder()
     return render_template("main.html")
 
 
@@ -69,11 +75,10 @@ def get_user_playlists():
     if not authorized:
         return redirect('/')
     my_playlists = get_nonempty_playlists()
-    get_tracks_from_playlist(my_playlists[9]['id'])
-    load_database(chosen_playlist)
-    encoder()
     return render_template("home.html", playlists=my_playlists)
 
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 def get_nonempty_playlists():
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
@@ -102,26 +107,26 @@ def load_database(playlist):
     all_songs = get_features(tracks)
 
 
+# Get top 10 tracks from every artist on the playlist
 def get_artists_tracks(playlist):
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
     all_tracks = []
     for track in playlist['items']:
-        if track.get("is_local") == False:
+        if not track.get("is_local"):
             artist_tracks = sp.artist_top_tracks(track['track']['artists'][0]['id'], country='US')
             for t in artist_tracks['tracks']:
                 all_tracks.append(t['id'])
     return all_tracks
 
-
+# Get info about every song in the database
 def get_features(tracks):
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
     features = []
     for track in tracks:
         track_features = sp.audio_features(track)
         features.append({"track_id": track, "features": track_features[0]})
-    for feature in features:
-        print(feature)
     return features
+
 
 def get_chosen_playlist_features():
     global chosen_playlist
@@ -129,6 +134,7 @@ def get_chosen_playlist_features():
     for track in chosen_playlist['items']:
         tracks.append(track['track']['id'])
     return get_features(tracks)
+
 
 def get_token():
     token_info = session.get("token_info", {})

@@ -7,7 +7,7 @@
    <body>
    <div>
        {% for playlist in playlists %}
-       <a href="{{ url_for('autoencoder', my_var=playlist.id) }}">
+       <a href="{{ url_for('autoencoder', id=playlist.id) }}">
         <figure style="--c:#fff5">
             <img src={{playlist.images[0].url}} alt="Mountains">
         </figure>
