@@ -1,7 +1,7 @@
 import time
 from os.path import exists
 import numpy as np
-import tensorflow as tf
+import itertools
 from sklearn.metrics.pairwise import cosine_similarity
 from keras.models import Model
 from keras.layers import Input, Dense
@@ -170,7 +170,7 @@ def encoder():
     song_ids = []
     song_features = []
     for song_dict in old_playlist_features:
-        song_features.append(list(song_dict.values())[0])
+        song_features.append(dict(itertools.islice((list(song_dict.values())[1]).items(), 11)))
 
     # Features of songs from old playlist
     playlist_songs_features = np.array(song_features)
@@ -178,18 +178,12 @@ def encoder():
     # Features of all songs from database
     all_songs_features = []
     for song_dict in all_songs:
-        all_songs_features.append(list(song_dict.values())[1])
-
-    # Normalize the feature matrix of all songs
-    normalized_all_songs_features = (all_songs_features - np.mean(all_songs_features, axis=0)) / np.std(
-        all_songs_features, axis=0)
-
-    # Normalize the feature matrix
-    normalized_song_features = (playlist_songs_features - np.mean(playlist_songs_features, axis=0)) / np.std(
-        playlist_songs_features, axis=0)
+        all_songs_features.append(dict(itertools.islice((list(song_dict.values())[1]).items(), 11)))
 
     # Define the dimensions of the autoencoder
-    input_dim = normalized_song_features.shape[1]
+    print(song_features)
+    print(all_songs_features)
+    input_dim = len(song_features[0])
     encoding_dim = 4
 
     # Define the autoencoder model
@@ -201,7 +195,7 @@ def encoder():
     autoencoder.compile(optimizer='adam', loss='mean_squared_error')
 
     # Train the autoencoder
-    autoencoder.fit(normalized_song_features, normalized_song_features, epochs=50, batch_size=32, shuffle=True)
+    autoencoder.fit(song_features, song_features, epochs=50, batch_size=32, shuffle=True)
 
     # Extract the encoder part of the autoencoder
     encoder = Model(inputs=input_layer, outputs=encoded)
@@ -210,7 +204,7 @@ def encoder():
     old_playlist_embedding = encoder.predict(song_features)
 
     # Calculate the cosine similarity between the old playlist embedding and all songs
-    similarities = cosine_similarity(old_playlist_embedding, normalized_all_songs_features)
+    similarities = cosine_similarity(old_playlist_embedding, all_songs_features)
 
     # Sort the similarities in descending order
     sorted_indices = np.argsort(-similarities)
