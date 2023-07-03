@@ -2,6 +2,10 @@ import base64
 import time
 import urllib
 from os.path import exists
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from keras.models import Model
+from keras.layers import Input, Dense
 
 import spotipy
 from flask import Flask, render_template, redirect, request, session, url_for
@@ -17,6 +21,8 @@ client_id = "f491929c43934c9487efb95c557b55c9"
 client_secret = "d34016d53bda4f89b0b448759c66e1c9"
 redirect_uri = "http://localhost:3000"
 scope = "playlist-read-private"
+
+songs=[]
 
 
 @app.route("/")
@@ -81,8 +87,9 @@ def get_nonempty_playlists():
 
 
 def load_database(playlist):
+    global songs
     tracks=get_artists_tracks(playlist)
-    get_features(tracks)
+    songs=get_features(tracks)
 
 
 def get_artists_tracks(playlist):
@@ -134,6 +141,56 @@ def create_spotify_oauth():
         client_secret=client_secret,
         redirect_uri=url_for('authorize', _external=True),
         scope=scope)
+
+def encoder():
+
+
+    # Convert song_data to a feature matrix
+    song_ids = []
+    song_features = []
+    for song_dict in songs:
+        song_ids.append(list(song_dict.keys())[0])
+        song_features.append(list(song_dict.values())[0])
+
+    song_features = np.array(song_features)
+
+    # Normalize the feature matrix
+    normalized_song_features = (song_features - np.mean(song_features, axis=0)) / np.std(song_features, axis=0)
+
+    # Define the dimensions of the autoencoder
+    input_dim = normalized_song_features.shape[1]
+    encoding_dim = 64
+
+    # Define the autoencoder model
+    input_layer = Input(shape=(input_dim,))
+    encoded = Dense(encoding_dim, activation='relu')(input_layer)
+    decoded = Dense(input_dim, activation='linear')(encoded)
+
+    autoencoder = Model(inputs=input_layer, outputs=decoded)
+    autoencoder.compile(optimizer='adam', loss='mean_squared_error')
+
+    # Train the autoencoder
+    autoencoder.fit(normalized_song_features, normalized_song_features, epochs=50, batch_size=32, shuffle=True)
+
+    # Extract the encoder part of the autoencoder
+    encoder = Model(inputs=input_layer, outputs=encoded)
+
+    # Calculate the embedding of the old playlist
+    old_playlist_embedding = encoder.predict(songs)
+
+    # Calculate the cosine similarity between the old playlist embedding and all songs
+    similarities = cosine_similarity(old_playlist_embedding, normalized_song_features)
+
+    # Sort the similarities in descending order
+    sorted_indices = np.argsort(-similarities)
+
+    # Get the top recommended songs
+    top_recommendations = [song_ids[i] for i in sorted_indices[:10]]
+
+    # Print the top recommended songs
+    print("Top Recommended Songs:")
+    for song_id in top_recommendations:
+        print(song_id)
 
 
 if __name__ == "__main__":
