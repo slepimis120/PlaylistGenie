@@ -22,7 +22,9 @@ client_secret = "d34016d53bda4f89b0b448759c66e1c9"
 redirect_uri = "http://localhost:3000"
 scope = "playlist-read-private"
 
-songs=[]
+all_songs=[]
+chosen_playlist_songs=[]
+chosen_playlist={}
 
 
 @app.route("/")
@@ -62,11 +64,13 @@ def logout():
 
 @app.route('/getPlaylists')
 def get_user_playlists():
+    global chosen_playlist
     session['token_info'], authorized = get_token()
     session.modified = True
     if not authorized:
         return redirect('/')
     my_playlists = get_nonempty_playlists()
+    chosen_playlist=my_playlists[0]
     #load_database(my_playlists[0])
     return render_template("home.html", playlists=my_playlists)
 
@@ -87,9 +91,9 @@ def get_nonempty_playlists():
 
 
 def load_database(playlist):
-    global songs
+    global all_songs
     tracks=get_artists_tracks(playlist)
-    songs=get_features(tracks)
+    all_songs=get_features(tracks)
 
 
 def get_artists_tracks(playlist):
@@ -114,6 +118,13 @@ def get_features(tracks):
     for feature in features:
         print(feature)
     return features
+
+def get_chosen_playlist_features():
+    global chosen_playlist
+    tracks=[]
+    for track in chosen_playlist['tracks']:
+        tracks.append(track['id'])
+    return get_features(tracks)
 
 
 def get_token():
@@ -143,23 +154,32 @@ def create_spotify_oauth():
         scope=scope)
 
 def encoder():
+    global all_songs
 
-
+    old_playlist_features=get_chosen_playlist_features()
     # Convert song_data to a feature matrix
     song_ids = []
     song_features = []
-    for song_dict in songs:
-        song_ids.append(list(song_dict.keys())[0])
+    for song_dict in old_playlist_features:
         song_features.append(list(song_dict.values())[0])
 
-    song_features = np.array(song_features)
+    #Features of songs from old playlist
+    playlist_songs_features = np.array(song_features)
+
+    #Features of all songs from database
+    all_songs_features=[]
+    for song_dict in all_songs:
+        all_songs_features.append(list(song_dict.values())[0])
+
+    # Normalize the feature matrix of all songs
+    normalized_all_songs_features=(all_songs_features - np.mean(all_songs_features, axis=0)) / np.std(all_songs_features, axis=0)
 
     # Normalize the feature matrix
-    normalized_song_features = (song_features - np.mean(song_features, axis=0)) / np.std(song_features, axis=0)
+    normalized_song_features = (playlist_songs_features - np.mean(playlist_songs_features, axis=0)) / np.std(playlist_songs_features, axis=0)
 
     # Define the dimensions of the autoencoder
     input_dim = normalized_song_features.shape[1]
-    encoding_dim = 64
+    encoding_dim = 4
 
     # Define the autoencoder model
     input_layer = Input(shape=(input_dim,))
@@ -176,10 +196,10 @@ def encoder():
     encoder = Model(inputs=input_layer, outputs=encoded)
 
     # Calculate the embedding of the old playlist
-    old_playlist_embedding = encoder.predict(songs)
+    old_playlist_embedding = encoder.predict(song_features)
 
     # Calculate the cosine similarity between the old playlist embedding and all songs
-    similarities = cosine_similarity(old_playlist_embedding, normalized_song_features)
+    similarities = cosine_similarity(old_playlist_embedding, normalized_all_songs_features)
 
     # Sort the similarities in descending order
     sorted_indices = np.argsort(-similarities)
