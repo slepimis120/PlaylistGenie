@@ -1,35 +1,32 @@
-import base64
 import time
-import urllib
 from os.path import exists
 import numpy as np
+import tensorflow as tf
 from sklearn.metrics.pairwise import cosine_similarity
 from keras.models import Model
 from keras.layers import Input, Dense
 
 import spotipy
 from flask import Flask, render_template, redirect, request, session, url_for
-import PlaylistGenie.methods.spotify as spotify
 
 app = Flask(__name__)
-
 
 app.secret_key = 'd53bda4f89b0b448759c66e1c9'
 app.config['SESSION_COOKIE_NAME'] = 'spotify-login-session'
 
-client_id = "f491929c43934c9487efb95c557b55c9"
-client_secret = "d34016d53bda4f89b0b448759c66e1c9"
+client_id = "d9e8ced8616446b29c5e55bc847168c3"
+client_secret = "22e8c3ddf1ea49079ab253646db6539b"
 redirect_uri = "http://localhost:3000"
 scope = "playlist-read-private"
 
-all_songs=[]
-chosen_playlist_songs=[]
-chosen_playlist={}
+all_songs = []
+chosen_playlist_songs = []
+chosen_playlist = {}
 
 
 @app.route("/")
 def index():
-    if(exists(".cache")):
+    if (exists(".cache")):
         return redirect("/getPlaylists")
     else:
         return render_template("main.html")
@@ -51,9 +48,11 @@ def authorize():
     session["token_info"] = token_info
     return redirect("/getPlaylists")
 
+
 @app.route('/autoencoder')
 def autoencoder():
     return render_template("main.html")
+
 
 @app.route('/logout')
 def logout():
@@ -70,8 +69,9 @@ def get_user_playlists():
     if not authorized:
         return redirect('/')
     my_playlists = get_nonempty_playlists()
-    chosen_playlist=my_playlists[0]
-    #load_database(my_playlists[0])
+    get_tracks_from_playlist(my_playlists[9]['id'])
+    load_database(chosen_playlist)
+    encoder()
     return render_template("home.html", playlists=my_playlists)
 
 
@@ -90,18 +90,22 @@ def get_nonempty_playlists():
     return new_playlists
 
 
+def get_tracks_from_playlist(playlist_id):
+    global chosen_playlist
+    sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
+    chosen_playlist = sp.playlist_items(playlist_id)
+
+
 def load_database(playlist):
     global all_songs
-    tracks=get_artists_tracks(playlist)
-    all_songs=get_features(tracks)
+    tracks = get_artists_tracks(playlist)
+    all_songs = get_features(tracks)
 
 
 def get_artists_tracks(playlist):
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
-    playlists = sp.current_user_playlists(limit=50)['items']
     all_tracks = []
-    tracks = sp.playlist_items(playlist['id'])
-    for track in tracks['items']:
+    for track in playlist['items']:
         if track.get("is_local") == False:
             artist_tracks = sp.artist_top_tracks(track['track']['artists'][0]['id'], country='US')
             for t in artist_tracks['tracks']:
@@ -111,24 +115,22 @@ def get_artists_tracks(playlist):
 
 def get_features(tracks):
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
-    features=[]
+    features = []
     for track in tracks:
         track_features = sp.audio_features(track)
-        features.append({"track_id":track,"features":track_features[0]})
+        features.append({"track_id": track, "features": track_features[0]})
     for feature in features:
         print(feature)
     return features
 
 def get_chosen_playlist_features():
     global chosen_playlist
-    tracks=[]
-    for track in chosen_playlist['tracks']:
-        tracks.append(track['id'])
+    tracks = []
+    for track in chosen_playlist['items']:
+        tracks.append(track['track']['id'])
     return get_features(tracks)
 
-
 def get_token():
-    token_valid = False
     token_info = session.get("token_info", {})
 
     if not (session.get('token_info', False)):
@@ -153,29 +155,32 @@ def create_spotify_oauth():
         redirect_uri=url_for('authorize', _external=True),
         scope=scope)
 
+
 def encoder():
     global all_songs
 
-    old_playlist_features=get_chosen_playlist_features()
+    old_playlist_features = get_chosen_playlist_features()
     # Convert song_data to a feature matrix
     song_ids = []
     song_features = []
     for song_dict in old_playlist_features:
         song_features.append(list(song_dict.values())[0])
 
-    #Features of songs from old playlist
+    # Features of songs from old playlist
     playlist_songs_features = np.array(song_features)
 
-    #Features of all songs from database
-    all_songs_features=[]
+    # Features of all songs from database
+    all_songs_features = []
     for song_dict in all_songs:
-        all_songs_features.append(list(song_dict.values())[0])
+        all_songs_features.append(list(song_dict.values())[1])
 
     # Normalize the feature matrix of all songs
-    normalized_all_songs_features=(all_songs_features - np.mean(all_songs_features, axis=0)) / np.std(all_songs_features, axis=0)
+    normalized_all_songs_features = (all_songs_features - np.mean(all_songs_features, axis=0)) / np.std(
+        all_songs_features, axis=0)
 
     # Normalize the feature matrix
-    normalized_song_features = (playlist_songs_features - np.mean(playlist_songs_features, axis=0)) / np.std(playlist_songs_features, axis=0)
+    normalized_song_features = (playlist_songs_features - np.mean(playlist_songs_features, axis=0)) / np.std(
+        playlist_songs_features, axis=0)
 
     # Define the dimensions of the autoencoder
     input_dim = normalized_song_features.shape[1]
