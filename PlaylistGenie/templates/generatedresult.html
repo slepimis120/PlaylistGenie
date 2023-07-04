@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PlaylistGenie</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/generatedresult.css') }}" />
+</head>
+<body>
+    <div>
+        <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/{{playlist_id}}?utm_source=generator" width="75%" height="75%" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    </div>
+</body>
+</html>

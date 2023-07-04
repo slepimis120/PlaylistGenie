@@ -1,0 +1,21 @@
+body{
+    margin: 0;
+    padding: 0;
+    background: #FFFC85;
+    display: table;
+}
+
+div {
+    text-align: center;
+    width: 100%;
+    vertical-align: middle;
+    height: 100%;
+    display: table-cell;
+}
+
+div,
+body,
+html {
+    height: 100%;
+    width: 100%;
+}
