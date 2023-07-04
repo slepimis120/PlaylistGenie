@@ -19,8 +19,8 @@ app = Flask(__name__)
 app.secret_key = 'd53bda4f89b0b448759c66e1c9'
 app.config['SESSION_COOKIE_NAME'] = 'spotify-login-session'
 
-client_id = "ba8b8a3b6c284130a18ed06f9c305922"
-client_secret = "71e8815a564042fd8478bb5f8a01ccc9"
+client_id = "e8790382ecf54dcc90a37ccb9956b08a"
+client_secret = "547e66f99a0a47cfba27f11db46861ae"
 redirect_uri = "http://localhost:3000"
 scope = "playlist-read-private playlist-modify-public playlist-modify-private ugc-image-upload"
 
@@ -75,6 +75,10 @@ def autoencoder():
     return render_template("generatedresult.html", playlist_id=new_playlist_id)
 
 
+@app.route('/about')
+def about():
+    return render_template("about.html")
+
 @app.route('/logout')
 def logout():
     for key in list(session.keys()):
@@ -99,7 +103,7 @@ def get_nonempty_playlists():
     global user_id
     sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
     my_playlists = sp.current_user_playlists(limit=50)['items']
-    user_id = my_playlists[0].get("owner").get("external_urls").get("spotify").split("/")[4]
+    user_id = sp.current_user().get("id")
     new_playlists = []
     for playlist in my_playlists:
         playlistitem = sp.playlist_items(playlist.get("id"))
