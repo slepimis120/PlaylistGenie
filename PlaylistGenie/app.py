@@ -105,6 +105,19 @@ def load_database(playlist):
     global all_songs
     tracks = get_artists_tracks(playlist)
     all_songs = get_features(tracks)
+    get_random_songs()
+
+
+def get_random_songs():
+    global all_songs
+    sp = spotipy.Spotify(auth=session.get('token_info').get('access_token'))
+    track_ids=[]
+    tracks = sp.search(q='rock', type='track', limit=50)
+    for t in tracks['tracks']['items']:
+        track_ids.append(t['id'])
+    song_features=get_features(track_ids)
+    all_songs.extend(song_features)
+    print(song_features)
 
 
 # Get top 10 tracks from every artist on the playlist
@@ -166,19 +179,21 @@ def encoder():
     global all_songs
 
     old_playlist_features = get_chosen_playlist_features()
-    
+
     song_features = []
     for song_dict in old_playlist_features:
         song_features.append(list(song_dict['features'].values())[0:11])
+    song_features = np.array(song_features)
+
+    normalized_song_features = (song_features - np.mean(song_features, axis=0)) / np.std(song_features, axis=0)
 
     all_songs_features = []
     for song_dict in all_songs:
         all_songs_features.append(list(song_dict['features'].values())[0:11])
+    all_songs_features = np.array(all_songs_features)
 
-    print(all_songs)
-    print(song_features)
-    print(all_songs_features)
-    print(len(all_songs_features))
+    normalized_all_songs_features = (all_songs_features - np.mean(all_songs_features, axis=0)) / np.std(all_songs_features, axis=0)
+
     input_dim = len(song_features[0])
     encoding_dim = 4
 
@@ -189,22 +204,18 @@ def encoder():
     autoencoder = Model(inputs=input_layer, outputs=decoded)
     autoencoder.compile(optimizer='adam', loss='mean_squared_error')
 
-    autoencoder.fit(song_features, song_features, epochs=50, batch_size=32, shuffle=True)
+    autoencoder.fit(normalized_song_features, normalized_song_features, epochs=50, batch_size=32, shuffle=True)
 
     encoder = Model(inputs=input_layer, outputs=encoded)
 
-    old_playlist_embedding = encoder.predict(song_features)
-
-
-    all_songs_embedding=encoder.predict(all_songs_features)
+    old_playlist_embedding = encoder.predict(normalized_song_features)
+    all_songs_embedding=encoder.predict(normalized_all_songs_features)
 
     similarities = cosine_similarity(old_playlist_embedding, all_songs_embedding)
     similarities = [sum(elements) for elements in zip(*similarities)]
-
     print(similarities)
 
     top_recommendations = [index for index, _ in sorted(enumerate(similarities), key=lambda x: x[1], reverse=True)[:10]]
-
 
     print("Top Recommended Songs:")
     for song_id in top_recommendations:
